@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Inventory{% endblock %}
+
+{% block extra_css %}
+<style>
+    .inventory-container {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+    }
+    
+    .inventory-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        padding: 25px;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+    }
+    
+    .inventory-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+    }
+    
+    .stock-indicator {
+        width: 100%;
+        height: 8px;
+        border-radius: 4px;
+        margin-top: 10px;
+    }
+    
+    .stock-high {
+        background: linear-gradient(90deg, #28a745, #20c997);
+    }
+    
+    .stock-medium {
+        background: linear-gradient(90deg, #ffc107, #fd7e14);
+    }
+    
+    .stock-low {
+        background: linear-gradient(90deg, #dc3545, #e83e8c);
+    }
+    
+    .log-item {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 10px;
+        margin-bottom: 8px;
+        border-left: 4px solid #667eea;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="inventory-container">
+    <div class="container-fluid">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="text-white text-center">
+                    <h1 class="display-4 fw-bold">
+                        <i class="fas fa-warehouse"></i> Inventory
+                    </h1>
+                    <p class="lead">Monitor your stock levels and inventory movements</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Controls -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="inventory-card">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <input type="text" class="form-control" placeholder="Search products..." value="{{ search_query }}">
+                                <button class="btn btn-primary" type="submit">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="lowStock" {% if show_low_stock %}checked{% endif %}>
+                                <label class="form-check-label" for="lowStock">
+                                    <i class="fas fa-exclamation-triangle text-warning"></i> Show Low Stock Only
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{% url 'inventory:list' %}" class="btn btn-outline-secondary w-100">
+                                <i class="fas fa-redo"></i> Reset
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <!-- Products List -->
+            <div class="col-lg-8">
+                {% if page_obj %}
+                    {% for product in page_obj %}
+                    <div class="inventory-card">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <div class="d-flex align-items-center">
+                                    <img src="{{ product.image.url|default:'/static/img/no-image.png' }}" alt="{{ product.product_name }}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 10px; margin-right: 15px;">
+                                    <div>
+                                        <h5 class="mb-1">{{ product.product_name }}</h5>
+                                        <p class="text-muted mb-1 small">{{ product.barcode|default:"No barcode" }}</p>
+                                        {% if product.category %}
+                                            <span class="badge bg-info">{{ product.category.name }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <div class="h3 mb-2">{{ product.stock_quantity }}</div>
+                                <div class="text-muted small">Units in Stock</div>
+                                <div class="stock-indicator {% if product.stock_quantity > 20 %}stock-high{% elif product.stock_quantity > 10 %}stock-medium{% else %}stock-low{% endif %}"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-3">
+                            <div class="col-6">
+                                <small class="text-muted">Selling Price:</small><br>
+                                <strong>${{ product.selling_price }}</strong>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">Cost Price:</small><br>
+                                <strong>${{ product.cost_price }}</strong>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <a href="/admin/products/product/{{ product.id }}/change/" class="btn btn-primary btn-sm">
+                                <i class="fas fa-edit"></i> Edit Product
+                            </a>
+                            <a href="/admin/products/product/{{ product.id }}/delete/" class="btn btn-outline-danger btn-sm">
+                                <i class="fas fa-trash"></i> Delete
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="inventory-card text-center">
+                        <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                        <h4>Unable to Load Inventory</h4>
+                        <p class="text-muted">{{ error|default:"There was an error loading inventory. Please try again." }}</p>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Recent Activity -->
+            <div class="col-lg-4">
+                <div class="inventory-card">
+                    <h5 class="mb-4">
+                        <i class="fas fa-clock"></i> Recent Activity
+                    </h5>
+                    
+                    {% if recent_logs %}
+                        {% for log in recent_logs %}
+                        <div class="log-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ log.product.product_name|truncatewords:3 }}</strong><br>
+                                    <small class="text-muted">{{ log.timestamp|date:"M d, H:i" }}</small>
+                                </div>
+                                <div>
+                                    {% if log.change_type == 'in' %}
+                                        <span class="badge bg-success">+{{ log.quantity }}</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">-{{ log.quantity }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center text-muted">
+                            <i class="fas fa-info-circle fa-2x mb-2"></i>
+                            <p>No recent activity</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

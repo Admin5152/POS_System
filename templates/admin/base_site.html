@@ -1,0 +1,49 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrastyle %}{{ block.super }}
+<style>
+.pos-banner {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px 20px;
+    margin: -20px -20px 20px -20px;
+    border-radius: 8px 8px 0 0;
+    text-align: center;
+}
+.pos-banner a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    background: rgba(255,255,255,0.2);
+    padding: 8px 16px;
+    border-radius: 20px;
+    margin: 0 5px;
+    transition: all 0.3s ease;
+}
+.pos-banner a:hover {
+    background: rgba(255,255,255,0.3);
+    color: white;
+    transform: translateY(-2px);
+}
+</style>
+{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">
+    <a href="{% url 'admin:index' %}">
+        <i class="fas fa-cash-register"></i> POS System Admin
+    </a>
+</h1>
+
+<div class="pos-banner">
+    <i class="fas fa-info-circle"></i> 
+    Looking for the main POS interface? 
+    <a href="/sales/pos/">
+        <i class="fas fa-terminal"></i> Go to POS Terminal
+    </a>
+    <a href="/reports/modern/">
+        <i class="fas fa-chart-line"></i> View Dashboard
+    </a>
+</div>
+{% endblock %}

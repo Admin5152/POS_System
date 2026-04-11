@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}Weekly Sales Report{% endblock %}
+
+{% block main_content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom">
+    <h1 class="h2"><i class="fas fa-calendar-week text-primary me-2"></i>Weekly Sales Report</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'reports:weekly_sales_export' %}" class="btn btn-primary shadow-sm hover-lift">
+            <i class="fas fa-file-csv me-2"></i>Download CSV
+        </a>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Day</th>
+                    <th class="text-center">Number of Transactions</th>
+                    <th class="text-end">Total Revenue</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in data %}
+                <tr>
+                    <td class="fw-semibold">{{ row.day|date:"Y-m-d" }}</td>
+                    <td class="text-center">
+                        <span class="badge bg-info rounded-pill px-3 py-2">{{ row.transactions }}</span>
+                    </td>
+                    <td class="text-end fw-bold text-success">${{ row.total_revenue|floatformat:2|default:"0.00" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" class="text-center py-5 text-muted">
+                        <i class="fas fa-chart-bar fa-2x mb-3 d-block text-secondary opacity-50"></i>
+                        No data available.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

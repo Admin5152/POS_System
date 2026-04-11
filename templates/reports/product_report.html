@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}Product Performance Report{% endblock %}
+
+{% block main_content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom">
+    <h1 class="h2"><i class="fas fa-box-open text-primary me-2"></i>Product Performance</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'reports:product_performance_export' %}" class="btn btn-primary shadow-sm hover-lift">
+            <i class="fas fa-file-csv me-2"></i>Download CSV
+        </a>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Product Name</th>
+                    <th class="text-center">Units Sold</th>
+                    <th class="text-end">Revenue Generated</th>
+                    <th class="text-center">Current Stock</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in data %}
+                <tr>
+                    <td class="fw-semibold">{{ row.product_name }}</td>
+                    <td class="text-center">
+                        <span class="badge bg-secondary rounded-pill px-3 py-2">{{ row.units_sold|default:"0" }}</span>
+                    </td>
+                    <td class="text-end fw-bold text-success">${{ row.revenue|floatformat:2|default:"0.00" }}</td>
+                    <td class="text-center">
+                        <span class="badge {% if row.stock_quantity > 10 %}bg-success{% else %}bg-danger{% endif %} rounded-pill px-3 py-2">
+                            {{ row.stock_quantity }}
+                        </span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center py-5 text-muted">
+                        <i class="fas fa-boxes fa-2x mb-3 d-block text-secondary opacity-50"></i>
+                        No product data available.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Employee Registration{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white text-center">
+                <h4><i class="fas fa-user-plus me-2"></i> Employee Registration</h4>
+            </div>
+            <div class="card-body p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    {% if form.errors %}
+                    <div class="alert alert-danger">
+                        <strong>Registration failed:</strong>
+                        <ul class="mb-0">
+                            {% for field, errors in form.errors.items %}
+                                {% for error in errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label for="id_username" class="form-label">Username</label>
+                        <input type="text" name="username" class="form-control" id="id_username" required autofocus>
+                        <div class="form-text">This will be your login username</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_email" class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control" id="id_email" required>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_first_name" class="form-label">First Name</label>
+                            <input type="text" name="first_name" class="form-control" id="id_first_name" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="id_last_name" class="form-label">Last Name</label>
+                            <input type="text" name="last_name" class="form-control" id="id_last_name" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_password" class="form-label">Password</label>
+                        <input type="password" name="password" class="form-control" id="id_password" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_confirm_password" class="form-label">Confirm Password</label>
+                        <input type="password" name="confirm_password" class="form-control" id="id_confirm_password" required>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Note:</strong> New employee accounts are created with <strong>Cashier</strong> role by default. 
+                        You will have access to POS terminal, returns, product viewing, and inventory pages.
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100 mt-3">
+                        <i class="fas fa-user-plus me-2"></i>Create Employee Account
+                    </button>
+                    
+                    <div class="text-center mt-3">
+                        <small class="text-muted">Already have an account? <a href="{% url 'accounts:login' %}">Login
+                                here</a></small>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

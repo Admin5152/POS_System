@@ -1,0 +1,8 @@
+# Environment Variables for Render Deployment
+SECRET_KEY=your-secret-key-here
+DEBUG=False
+ALLOWED_HOSTS=.onrender.com
+DATABASE_URL=postgresql://username:password@host:port/database
+EMAIL_HOST_USER=your-email@gmail.com
+EMAIL_HOST_PASSWORD=your-app-password
+DEFAULT_FROM_EMAIL=your-email@gmail.com

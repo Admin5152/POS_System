@@ -1,0 +1,540 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Modern POS Terminal{% endblock %}
+
+{% block extra_css %}
+<style>
+    .pos-header {
+        background: linear-gradient(135deg, var(--primary-color), #6366f1);
+        color: white;
+        padding: 20px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .barcode-input {
+        font-size: 1.5rem;
+        padding: 20px;
+        border: 3px solid var(--border-color);
+        border-radius: 12px;
+        text-align: center;
+        transition: var(--transition);
+        margin-bottom: 20px;
+    }
+    
+    .barcode-input:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.2);
+        outline: none;
+    }
+    
+    .quick-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+    
+    .quick-action-btn {
+        padding: 16px;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        background: var(--card-bg);
+        cursor: pointer;
+        transition: var(--transition);
+        text-align: center;
+        font-weight: 600;
+    }
+    
+    .quick-action-btn:hover {
+        border-color: var(--primary-color);
+        background: rgba(79, 70, 229, 0.1);
+        transform: translateY(-2px);
+    }
+    
+    .cart-summary {
+        background: var(--card-bg);
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: var(--shadow-sm);
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    .order-summary {
+        background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: var(--shadow-md);
+    }
+    
+    .order-summary-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 12px;
+        font-size: 1.1rem;
+    }
+    
+    .order-summary-row.total {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        padding-top: 12px;
+        border-top: 2px solid var(--border-color);
+    }
+    
+    .payment-section {
+        margin-top: 20px;
+    }
+    
+    .product-search-results {
+        max-height: 300px;
+        overflow-y: auto;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background: var(--card-bg);
+    }
+    
+    .search-result-item {
+        padding: 12px;
+        border-bottom: 1px solid var(--border-color);
+        cursor: pointer;
+        transition: var(--transition);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .search-result-item:hover {
+        background: var(--light-bg);
+    }
+    
+    .search-result-item.selected {
+        background: rgba(16, 185, 129, 0.1);
+        border-left: 4px solid var(--success-color);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="pos-container">
+    <!-- Left Panel -->
+    <div class="pos-left-panel">
+        <div class="pos-header">
+            <h4 class="mb-0">
+                <i class="fas fa-barcode me-2"></i>POS Terminal
+            </h4>
+        </div>
+        
+        <!-- Barcode Input -->
+        <div class="search-modern">
+            <input type="text" 
+                   class="barcode-input" 
+                   id="barcodeInput" 
+                   placeholder="Scan barcode or search..."
+                   autocomplete="off"
+                   autofocus>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <button class="quick-action-btn" onclick="clearCart()">
+                <i class="fas fa-trash me-2"></i>Clear Cart
+            </button>
+            <button class="quick-action-btn" onclick="showCustomerSearch()">
+                <i class="fas fa-user me-2"></i>Add Customer
+            </button>
+            <button class="quick-action-btn" onclick="showDiscount()">
+                <i class="fas fa-percentage me-2"></i>Discount
+            </button>
+            <button class="quick-action-btn" onclick="suspendSale()">
+                <i class="fas fa-pause me-2"></i>Suspend
+            </button>
+        </div>
+        
+        <!-- Product Search Results -->
+        <div class="product-search-results" id="searchResults" style="display: none;">
+            <!-- Search results will be populated here -->
+        </div>
+        
+        <!-- Categories -->
+        <div class="category-pills">
+            <div class="category-pill active" onclick="filterByCategory('all')">All Products</div>
+            <div class="category-pill" onclick="filterByCategory('beverages')">Beverages</div>
+            <div class="category-pill" onclick="filterByCategory('snacks')">Snacks</div>
+            <div class="category-pill" onclick="filterByCategory('electronics')">Electronics</div>
+            <div class="category-pill" onclick="filterByCategory('groceries')">Groceries</div>
+        </div>
+        
+        <!-- Product Grid -->
+        <div class="product-grid" id="productGrid">
+            {% for product in products %}
+            <div class="product-item" 
+                 onclick="addToCart({{ product.id }}, '{{ product.product_name }}', {{ product.price }})"
+                 data-category="{{ product.category.name|default:'uncategorized' }}">
+                {% if product.image %}
+                <img src="{{ product.image.url }}" alt="{{ product.product_name }}" 
+                     style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px; margin-bottom: 8px;">
+                {% endif %}
+                <div class="product-name">{{ product.product_name }}</div>
+                <div class="product-price">${{ product.price }}</div>
+            </div>
+            {% empty %}
+            <div class="text-center text-muted py-4">
+                <i class="fas fa-box-open fa-3x mb-3"></i>
+                <p>No products found</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Center Panel -->
+    <div class="pos-center-panel">
+        <div class="cart-summary">
+            <h5 class="mb-3">
+                <i class="fas fa-shopping-cart me-2"></i>Current Order
+            </h5>
+            <div id="cartItems">
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-shopping-cart fa-2x mb-3"></i>
+                    <p>Cart is empty</p>
+                    <p class="small">Add products to start</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Right Panel -->
+    <div class="pos-right-panel">
+        <div class="order-summary">
+            <h5 class="mb-3">
+                <i class="fas fa-receipt me-2"></i>Order Summary
+            </h5>
+            
+            <div class="order-summary-row">
+                <span>Subtotal:</span>
+                <span id="subtotal">$0.00</span>
+            </div>
+            
+            <div class="order-summary-row">
+                <span>Tax (10%):</span>
+                <span id="tax">$0.00</span>
+            </div>
+            
+            <div class="order-summary-row">
+                <span>Discount:</span>
+                <span id="discount">$0.00</span>
+            </div>
+            
+            <div class="order-summary-row total">
+                <span>Total:</span>
+                <span id="total">$0.00</span>
+            </div>
+            
+            <!-- Payment Buttons -->
+            <div class="payment-section">
+                <div class="payment-grid">
+                    <button class="payment-btn cash" onclick="processPayment('cash')">
+                        <i class="fas fa-money-bill-wave me-2"></i>Cash
+                    </button>
+                    <button class="payment-btn card" onclick="processPayment('card')">
+                        <i class="fas fa-credit-card me-2"></i>Card
+                    </button>
+                    <button class="payment-btn mobile" onclick="processPayment('mobile')">
+                        <i class="fas fa-mobile-alt me-2"></i>Mobile
+                    </button>
+                    <button class="payment-btn" onclick="processPayment('other')">
+                        <i class="fas fa-ellipsis-h me-2"></i>Other
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript -->
+<script>
+let cart = [];
+let currentCustomer = null;
+let currentDiscount = 0;
+
+// Barcode/Search input handling
+document.getElementById('barcodeInput').addEventListener('input', function(e) {
+    const query = e.target.value.trim();
+    if (query.length > 0) {
+        searchProducts(query);
+    } else {
+        hideSearchResults();
+        showAllProducts();
+    }
+});
+
+document.getElementById('barcodeInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        const query = e.target.value.trim();
+        if (query) {
+            // Try to find product by barcode first
+            findProductByBarcode(query);
+        }
+    }
+});
+
+function searchProducts(query) {
+    fetch('/sales/api/product-search/?q=' + encodeURIComponent(query))
+        .then(response => response.json())
+        .then(data => {
+            displaySearchResults(data.products);
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+function displaySearchResults(products) {
+    const searchResults = document.getElementById('searchResults');
+    const productGrid = document.getElementById('productGrid');
+    
+    if (products.length > 0) {
+        searchResults.innerHTML = products.map(product => `
+            <div class="search-result-item" onclick="addToCart(${product.id}, '${product.product_name}', ${product.price})">
+                <div>
+                    <strong>${product.product_name}</strong>
+                    <small class="text-muted d-block">$${product.price}</small>
+                </div>
+                <i class="fas fa-plus text-success"></i>
+            </div>
+        `).join('');
+        searchResults.style.display = 'block';
+        productGrid.style.display = 'none';
+    } else {
+        searchResults.innerHTML = '<div class="text-center p-3 text-muted">No products found</div>';
+        searchResults.style.display = 'block';
+        productGrid.style.display = 'none';
+    }
+}
+
+function hideSearchResults() {
+    document.getElementById('searchResults').style.display = 'none';
+    document.getElementById('productGrid').style.display = 'grid';
+}
+
+function showAllProducts() {
+    hideSearchResults();
+}
+
+function findProductByBarcode(barcode) {
+    fetch('/sales/api/by-barcode/' + encodeURIComponent(barcode) + '/')
+        .then(response => response.json())
+        .then(product => {
+            if (product) {
+                addToCart(product.id, product.product_name, product.price);
+                document.getElementById('barcodeInput').value = '';
+                hideSearchResults();
+            } else {
+                showNotification('Product not found', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error searching for product', 'error');
+        });
+}
+
+function addToCart(productId, productName, price) {
+    const existingItem = cart.find(item => item.id === productId);
+    
+    if (existingItem) {
+        existingItem.quantity += 1;
+    } else {
+        cart.push({
+            id: productId,
+            name: productName,
+            price: price,
+            quantity: 1
+        });
+    }
+    
+    updateCartDisplay();
+    highlightProduct(productId);
+    showNotification(productName + ' added to cart', 'success');
+}
+
+function removeFromCart(productId) {
+    cart = cart.filter(item => item.id !== productId);
+    updateCartDisplay();
+    showNotification('Item removed from cart', 'info');
+}
+
+function updateQuantity(productId, change) {
+    const item = cart.find(item => item.id === productId);
+    if (item) {
+        item.quantity += change;
+        if (item.quantity <= 0) {
+            removeFromCart(productId);
+        } else {
+            updateCartDisplay();
+        }
+    }
+}
+
+function updateCartDisplay() {
+    const cartItems = document.getElementById('cartItems');
+    
+    if (cart.length === 0) {
+        cartItems.innerHTML = `
+            <div class="text-center text-muted py-4">
+                <i class="fas fa-shopping-cart fa-2x mb-3"></i>
+                <p>Cart is empty</p>
+                <p class="small">Add products to start</p>
+            </div>
+        `;
+    } else {
+        cartItems.innerHTML = cart.map(item => `
+            <div class="cart-item animate-slide-in">
+                <div class="cart-item-info">
+                    <div class="cart-item-name">${item.name}</div>
+                    <div class="cart-item-price">$${item.price.toFixed(2)} x ${item.quantity}</div>
+                </div>
+                <div class="quantity-controls">
+                    <button class="quantity-btn" onclick="updateQuantity(${item.id}, -1)">-</button>
+                    <span class="quantity-display">${item.quantity}</span>
+                    <button class="quantity-btn" onclick="updateQuantity(${item.id}, 1)">+</button>
+                    <button class="quantity-btn text-danger" onclick="removeFromCart(${item.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    updateOrderSummary();
+}
+
+function updateOrderSummary() {
+    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const tax = subtotal * 0.1;
+    const discountAmount = subtotal * (currentDiscount / 100);
+    const total = subtotal + tax - discountAmount;
+    
+    document.getElementById('subtotal').textContent = '$' + subtotal.toFixed(2);
+    document.getElementById('tax').textContent = '$' + tax.toFixed(2);
+    document.getElementById('discount').textContent = '$' + discountAmount.toFixed(2);
+    document.getElementById('total').textContent = '$' + total.toFixed(2);
+}
+
+function clearCart() {
+    if (cart.length > 0 && confirm('Are you sure you want to clear the cart?')) {
+        cart = [];
+        updateCartDisplay();
+        showNotification('Cart cleared', 'info');
+    }
+}
+
+function processPayment(method) {
+    if (cart.length === 0) {
+        showNotification('Cart is empty', 'error');
+        return;
+    }
+    
+    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const tax = subtotal * 0.1;
+    const discountAmount = subtotal * (currentDiscount / 100);
+    const total = subtotal + tax - discountAmount;
+    
+    // Process payment (you would integrate with payment gateway here)
+    showNotification('Processing ' + method + ' payment of $' + total.toFixed(2), 'success');
+    
+    // Here you would typically:
+    // 1. Create sale record
+    // 2. Update inventory
+    // 3. Print receipt
+    // 4. Clear cart
+    
+    setTimeout(() => {
+        cart = [];
+        updateCartDisplay();
+        showNotification('Payment successful', 'success');
+    }, 2000);
+}
+
+function filterByCategory(category) {
+    // Update active category pill
+    document.querySelectorAll('.category-pill').forEach(pill => {
+        pill.classList.remove('active');
+    });
+    event.target.classList.add('active');
+    
+    // Filter products
+    const products = document.querySelectorAll('.product-item');
+    products.forEach(product => {
+        if (category === 'all' || product.dataset.category === category) {
+            product.style.display = 'block';
+        } else {
+            product.style.display = 'none';
+        }
+    });
+}
+
+function highlightProduct(productId) {
+    // Remove previous highlights
+    document.querySelectorAll('.product-item').forEach(item => {
+        item.classList.remove('selected', 'animate-pulse');
+    });
+    
+    // Add highlight to selected product
+    const productElement = document.querySelector('.product-item[onclick*="' + productId + '"]');
+    if (productElement) {
+        productElement.classList.add('selected', 'animate-pulse');
+        setTimeout(() => {
+            productElement.classList.remove('animate-pulse');
+        }, 1000);
+    }
+}
+
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.className = 'alert alert-' + type + ' alert-dismissible fade show animate-slide-in position-fixed';
+    notification.style.cssText = 'position: fixed; top: 80px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+function showCustomerSearch() {
+    // Implement customer search modal
+    showNotification('Customer search coming soon', 'info');
+}
+
+function showDiscount() {
+    const discount = prompt('Enter discount percentage:');
+    if (discount && !isNaN(discount)) {
+        currentDiscount = parseFloat(discount);
+        updateOrderSummary();
+        showNotification('Discount set to ' + discount + '%', 'success');
+    }
+}
+
+function suspendSale() {
+    if (cart.length > 0) {
+        // Implement sale suspension
+        showNotification('Sale suspended', 'info');
+    } else {
+        showNotification('No items to suspend', 'error');
+    }
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    updateCartDisplay();
+    document.getElementById('barcodeInput').focus();
+});
+</script>
+{% endblock %}

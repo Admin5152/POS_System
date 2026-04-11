@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sign In / Sign Up{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/auth.css' %}">
+{% endblock %}
+
+{% block auth_content %}
+<div class="auth-body">
+    <div class="auth-container {% if active_panel == 'register' %}right-panel-active{% endif %}" id="auth-container">
+
+        <!-- Sign Up Form (Left when active, otherwise hidden/behind) -->
+        <div class="form-container sign-up-container">
+            <form action="{% url 'accounts:register' %}" method="post">
+                {% csrf_token %}
+                <h1>Create Account</h1>
+                <div class="social-container">
+                    <!-- <a href="#" class="social"><i class="fab fa-google"></i></a>
+                    <a href="#" class="social"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="social"><i class="fab fa-github"></i></a>
+                    <a href="#" class="social"><i class="fab fa-linkedin-in"></i></a> -->
+                </div>
+                <span>You must be new here, Hi there</span>
+
+                {% if register_errors %}
+                <div class="auth-alert error">
+                    <ul class="mb-0 ps-3">
+                        {% for error in register_errors %}
+                        <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                <input type="text" name="username" placeholder="Username" required
+                    value="{{ request.POST.username|default:'' }}" />
+                <input type="email" name="email" placeholder="Email" required
+                    value="{{ request.POST.email|default:'' }}" />
+
+                <div class="input-row">
+                    <input type="text" name="first_name" placeholder="First Name" required
+                        value="{{ request.POST.first_name|default:'' }}" />
+                    <input type="text" name="last_name" placeholder="Last Name" required
+                        value="{{ request.POST.last_name|default:'' }}" />
+                </div>
+
+                <div class="input-row">
+                    <input type="password" name="password" placeholder="Password" required />
+                    <input type="password" name="confirm_password" placeholder="Confirm Password" required />
+                </div>
+
+                <button type="submit" class="mt-3">Sign Up</button>
+            </form>
+        </div>
+
+        <!-- Sign In Form (Right when register active, overlay covers it, Left when sign-in active) -->
+        <div class="form-container sign-in-container">
+            <form action="{% url 'accounts:login' %}" method="post">
+                {% csrf_token %}
+                <h1>Sign In</h1>
+                <div class="social-container">
+                    <!-- <a href="#" class="social"><i class="fab fa-google"></i></a>
+                    <a href="#" class="social"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="social"><i class="fab fa-github"></i></a>
+                    <a href="#" class="social"><i class="fab fa-linkedin-in"></i></a> -->
+                </div>
+
+                {% if login_error %}
+                <div class="auth-alert error">
+                    {{ login_error }}
+                </div>
+                {% endif %}
+
+                <!-- We manually put username and password for django auth -->
+                <input type="text" name="username" placeholder="Username" required />
+                <input type="password" name="password" placeholder="Password" required />
+                <input type="hidden" name="next" value="{{ next|default:'/' }}">
+
+                <a href="#"></a>
+                <button type="submit">Sign In</button>
+            </form>
+        </div>
+
+        <!-- Sliding Overlay -->
+        <div class="overlay-container">
+            <div class="overlay">
+                <div class="overlay-panel overlay-left">
+                    <h1>Have an account?</h1>
+                    <p>Sign in to your account</p>
+                    <button class="ghost" id="signIn">Sign In</button>
+                </div>
+                <div class="overlay-panel overlay-right">
+                    <h1>Dont have an account yet?</h1>
+                    <p>Click the button below to Sign </p>
+                    <button class="ghost" id="signUp">Sign Up</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const signUpButton = document.getElementById('signUp');
+    const signInButton = document.getElementById('signIn');
+    const container = document.getElementById('auth-container');
+
+    signUpButton.addEventListener('click', () => {
+        container.classList.add("right-panel-active");
+        // Update URL without reloading to reflect register state
+        window.history.pushState({}, '', "{% url 'accounts:register' %}");
+    });
+
+    signInButton.addEventListener('click', () => {
+        container.classList.remove("right-panel-active");
+        // Update URL without reloading to reflect login state
+        window.history.pushState({}, '', "{% url 'accounts:login' %}");
+    });
+</script>
+{% endblock %}

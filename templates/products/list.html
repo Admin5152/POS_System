@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block title %}Products{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="h4 mb-0 fw-bold"><i class="fas fa-box text-primary me-2"></i> Products Management</h2>
+    {% if user.role == 'admin' %}
+    <a href="{% url 'products:add' %}" class="btn btn-primary btn-modern rounded-pill px-4">
+        <i class="fas fa-plus me-1"></i> Add Product
+    </a>
+    {% endif %}
+</div>
+
+<!-- Search + Category Tabs -->
+<div class="modern-card mb-4">
+    <!-- Search -->
+    <div class="p-3 pb-0">
+        <form method="get" class="d-flex gap-2">
+            {% if active_cat and active_cat != 'all' %}
+            <input type="hidden" name="cat" value="{{ active_cat }}">
+            {% endif %}
+            <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Search by name or barcode...">
+            <button type="submit" class="btn btn-primary px-4">Search</button>
+            {% if query %}<a href="{% url 'products:list' %}" class="btn btn-outline-secondary">Clear</a>{% endif %}
+        </form>
+    </div>
+
+    <!-- Category Tabs -->
+    <div style="display:flex;gap:.4rem;padding:.75rem 1.25rem;overflow-x:auto;border-bottom:1px solid #f1f3f5;scrollbar-width:none;">
+        <a href="?q={{ query }}&cat=all"
+           class="text-decoration-none px-3 py-1 rounded-pill fw-semibold"
+           style="font-size:.8rem;flex-shrink:0;{% if active_cat == 'all' or not active_cat %}background:#0655d4;color:#fff;{% else %}background:#f1f3f5;color:#495057;{% endif %}">
+            <i class="fas fa-th-large me-1"></i> All Items
+        </a>
+        {% for cat in categories %}
+        <a href="?q={{ query }}&cat={{ cat.id }}"
+           class="text-decoration-none px-3 py-1 rounded-pill fw-semibold"
+           style="font-size:.8rem;flex-shrink:0;white-space:nowrap;{% if active_cat == cat.id|stringformat:'s' %}background:#0655d4;color:#fff;{% else %}background:#f1f3f5;color:#495057;{% endif %}">
+            {{ cat.name }}
+        </a>
+        {% endfor %}
+    </div>
+
+    <!-- Count -->
+    <div class="px-4 pt-2 pb-0">
+        <small class="text-muted">{{ products|length }} product{{ products|length|pluralize }} found</small>
+    </div>
+
+    <!-- Table -->
+    <div class="table-responsive">
+        <table class="table modern-table mb-0">
+            <thead>
+                <tr>
+                    <th>Image</th>
+                    <th>Barcode</th>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    {% if user.role == 'admin' %}<th class="text-end">Actions</th>{% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                <tr>
+                    <td>
+                        {% if product.image %}
+                        <img src="{{ product.image.url }}" alt="{{ product.product_name }}" width="44" height="44" class="rounded-2" style="object-fit:cover;">
+                        {% else %}
+                        <span class="bg-light border rounded-2 d-inline-flex align-items-center justify-content-center text-muted" style="width:44px;height:44px;">
+                            <i class="fas fa-image"></i>
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td><code>{{ product.barcode|default:"-" }}</code></td>
+                    <td class="fw-semibold">{{ product.product_name }}</td>
+                    <td>
+                        {% if product.category %}
+                        <span class="badge rounded-pill" style="background:#e8f0fe;color:#0655d4;font-size:.75rem;">{{ product.category }}</span>
+                        {% else %}
+                        <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td class="fw-bold text-success">${{ product.price }}</td>
+                    <td>
+                        {% if product.stock_quantity <= 5 %}
+                        <span class="badge bg-danger rounded-pill">{{ product.stock_quantity }}</span>
+                        {% elif product.stock_quantity <= 15 %}
+                        <span class="badge bg-warning text-dark rounded-pill">{{ product.stock_quantity }}</span>
+                        {% else %}
+                        <span class="badge bg-success rounded-pill">{{ product.stock_quantity }}</span>
+                        {% endif %}
+                    </td>
+                    {% if user.role == 'admin' %}
+                    <td class="text-end">
+                        <a href="{% url 'products:edit' product.id %}" class="btn btn-sm btn-outline-primary rounded-pill me-1"><i class="fas fa-edit"></i></a>
+                        <a href="{% url 'products:delete' product.id %}" class="btn btn-sm btn-outline-danger rounded-pill"><i class="fas fa-trash"></i></a>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="{% if user.role == 'admin' %}7{% else %}6{% endif %}" class="text-center py-5 text-muted">
+                        <i class="fas fa-box-open fa-3x mb-3 opacity-25 d-block"></i>
+                        No products found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

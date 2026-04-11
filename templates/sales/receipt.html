@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Checkout - Receipt #{{ sale.id }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+
+        #printable-receipt,
+        #printable-receipt * {
+            visibility: visible;
+        }
+
+        #printable-receipt {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+        }
+
+        .no-print {
+            display: none !important;
+        }
+    }
+
+    .receipt-container {
+        font-family: 'Courier New', Courier, monospace;
+        background-color: #fff;
+        max-width: 400px;
+        margin: 0 auto;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+    }
+
+    .receipt-header,
+    .receipt-footer {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .receipt-table {
+        width: 100%;
+        margin-bottom: 20px;
+        border-collapse: collapse;
+    }
+
+    .receipt-table th,
+    .receipt-table td {
+        padding: 5px 0;
+        border-bottom: 1px dashed #ccc;
+    }
+
+    .receipt-totals {
+        margin-top: 15px;
+    }
+
+    .receipt-totals div {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mt-4">
+    <div class="col-12 text-center mb-4 no-print">
+        <h2 class="text-success"><i class="fas fa-check-circle"></i> Transaction Successful</h2>
+        <p>Sale #{{ sale.id }} has been processed.</p>
+        <button onclick="window.print()" class="btn btn-primary"><i class="fas fa-print"></i> Print Receipt</button>
+        <a href="{% url 'sales:pos' %}" class="btn btn-secondary">Next Customer</a>
+    </div>
+
+    <div class="col-12" id="printable-receipt">
+        <div class="receipt-container shadow-sm">
+            <div class="receipt-header">
+                <h3><strong>Seth's Store</strong></h3>
+                <p>Accra, Ghana<br>
+                    Tel:+233 53 568 6135</p>
+                <p>-----------------------------------</p>
+                <div class="d-flex justify-content-between text-start small">
+                    <div>
+                        <strong>Date:</strong> {{ sale.date|date:"M d, Y" }}<br>
+                        <strong>Time:</strong> {{ sale.date|time:"H:i:s" }}
+                    </div>
+                    <div>
+                        <strong>Txn ID:</strong> #{{ sale.id }}<br>
+                        <strong>Cashier:</strong> {{ sale.user.username }}
+                    </div>
+                </div>
+                <p class="mb-0 text-start small mt-2">
+                    <strong>Customer:</strong> {{ sale.customer.name|default:"Walk-in Customer" }}
+                    {% if sale.customer %}
+                    <br><strong>Loyalty Points Earned:</strong> {{ sale.total_amount|floatformat:0 }}
+                    {% endif %}
+                </p>
+                <p>-----------------------------------</p>
+            </div>
+
+            <table class="receipt-table small">
+                <thead>
+                    <tr>
+                        <th class="text-start">Item</th>
+                        <th class="text-center">Qty</th>
+                        <th class="text-end">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in sale.items.all %}
+                    <tr>
+                        <td class="text-start">{{ item.product.product_name }}<br><small class="text-muted">@ ${{
+                                item.price }}</small></td>
+                        <td class="text-center">{{ item.quantity }}</td>
+                        <td class="text-end">${% widthratio item.price 1 item.quantity %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="receipt-totals font-weight-bold">
+                <div>
+                    <span>Subtotal:</span>
+                    <span>${{ sale.total_amount|floatformat:2 }}</span>
+                </div>
+                <div>
+                    <span>Tax (0%):</span>
+                    <span>$0.00</span>
+                </div>
+                <div class="mt-2 pt-2 border-top border-dark h5">
+                    <strong>Total:</strong>
+                    <strong>${{ sale.total_amount|floatformat:2 }}</strong>
+                </div>
+                <div class="mt-2 small text-muted">
+                    <span>Payment Method:</span>
+                    <span>{{ sale.get_payment_method_display|upper }}</span>
+                </div>
+            </div>
+
+            <div class="receipt-footer mt-4 small">
+                <p>-----------------------------------</p>
+                <p><strong>Thank you for your purchase!</strong></p>
+                <p>Please come again.</p>
+                <p class="text-muted" style="font-size: 0.7em;">Seth's Store</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

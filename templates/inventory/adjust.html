@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}Adjust Stock{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm mt-4">
+            <div class="card-header bg-warning">
+                <h4 class="mb-0 text-dark"><i class="fas fa-sliders-h"></i> Adjust Stock</h4>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">{{ product.product_name }}</h5>
+                <p class="text-muted">Current Stock: <strong>{{ product.stock_quantity }}</strong></p>
+                <hr>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Stock Change Adjustment (+ for add, - for remove)</label>
+                        <input type="number" name="adjustment" class="form-control" required
+                            placeholder="e.g., 50 or -5">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Reason for Adjustment</label>
+                        <input type="text" name="reason" class="form-control" required
+                            placeholder="e.g., Supplier Delivery">
+                    </div>
+
+                    <button type="submit" class="btn btn-warning mt-3"><i class="fas fa-save"></i> Save
+                        Adjustment</button>
+                    <a href="{% url 'inventory:list' %}" class="btn btn-secondary mt-3 ms-2">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

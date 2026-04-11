@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2><i class="fas fa-chart-pie"></i> {{ title }}</h2>
+    <p class="text-muted">Period: {{ start_date }} to {{ end_date }}</p>
+</div>
+
+<!-- Period Selection -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label for="period" class="form-label">Select Period</label>
+                <select name="period" id="period" class="form-select" onchange="this.form.submit()">
+                    <option value="daily" {% if period == 'daily' %}selected{% endif %}>Daily</option>
+                    <option value="weekly" {% if period == 'weekly' %}selected{% endif %}>Weekly</option>
+                    <option value="monthly" {% if period == 'monthly' %}selected{% endif %}>Monthly</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary">Update Report</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Profit Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white shadow">
+            <div class="card-body">
+                <h5 class="card-title">Total Revenue</h5>
+                <h3>${{ total_revenue|floatformat:2 }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-danger text-white shadow">
+            <div class="card-body">
+                <h5 class="card-title">Cost of Goods Sold</h5>
+                <h3>${{ total_cogs|floatformat:2 }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white shadow">
+            <div class="card-body">
+                <h5 class="card-title">Gross Profit</h5>
+                <h3>${{ gross_profit|floatformat:2 }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white shadow">
+            <div class="card-body">
+                <h5 class="card-title">Profit Margin</h5>
+                <h3>{{ profit_margin|floatformat:1 }}%</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Profit Visualization -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Profit Analysis</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Revenue vs COGS</h6>
+                        {% if total_revenue > 0 %}
+                        <div class="progress mb-3" style="height: 25px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 100%">
+                                Revenue: ${{ total_revenue|floatformat:2 }}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Profit Margin</h6>
+                        {% if profit_margin > 0 %}
+                        <div class="progress mb-3" style="height: 25px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: {{ profit_margin|floatformat:0 }}%">{{ profit_margin|floatformat:1 }}%</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Profit Formula Display -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Profit Calculation</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h5>Formula:</h5>
+                    <div class="alert alert-info">
+                        <strong>Profit = Revenue - Cost of Goods Sold (COGS)</strong>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <h6>Calculation:</h6>
+                    <div class="border rounded p-3 bg-light">
+                        <div class="mb-2">
+                            <strong>Revenue:</strong> ${{ total_revenue|floatformat:2 }}
+                        </div>
+                        <div class="mb-2">
+                            <strong>COGS:</strong> ${{ total_cogs|floatformat:2 }}
+                        </div>
+                        <hr>
+                        <div class="mb-2">
+                            <strong>Gross Profit:</strong> ${{ gross_profit|floatformat:2 }}
+                        </div>
+                        <div>
+                            <strong>Profit Margin:</strong> {{ profit_margin|floatformat:1 }}%
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Performance Indicators</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6>Profit Status:</h6>
+                    {% if profit_margin >= 30 %}
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <strong>Excellent Profit Margin ({{ profit_margin|floatformat:1 }}%)</strong>
+                    </div>
+                    {% elif profit_margin >= 20 %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Good Profit Margin ({{ profit_margin|floatformat:1 }}%)</strong>
+                    </div>
+                    {% elif profit_margin >= 10 %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Moderate Profit Margin ({{ profit_margin|floatformat:1 }}%)</strong>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-danger">
+                        <i class="fas fa-times-circle me-2"></i>
+                        <strong>Low Profit Margin ({{ profit_margin|floatformat:1 }}%)</strong>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <h6>Recommendations:</h6>
+                    {% if profit_margin < 20 %}
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-arrow-up text-success me-2"></i>Consider increasing product prices</li>
+                        <li><i class="fas fa-arrow-down text-danger me-2"></i>Negotiate better supplier costs</li>
+                        <li><i class="fas fa-chart-line text-info me-2"></i>Focus on high-margin products</li>
+                    </ul>
+                    {% else %}
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-check text-success me-2"></i>Maintain current pricing strategy</li>
+                        <li><i class="fas fa-trophy text-warning me-2"></i>Continue monitoring supplier costs</li>
+                        <li><i class="fas fa-chart-pie text-info me-2"></i>Track product performance</li>
+                    </ul>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

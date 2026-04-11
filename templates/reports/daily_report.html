@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}Daily Sales Report{% endblock %}
+
+{% block main_content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom">
+    <h1 class="h2"><i class="fas fa-calendar-day text-primary me-2"></i>Daily Sales Report</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'reports:daily_sales_export' %}" class="btn btn-primary shadow-sm hover-lift">
+            <i class="fas fa-file-csv me-2"></i>Download CSV
+        </a>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Date</th>
+                    <th>Transaction ID</th>
+                    <th>Customer</th>
+                    <th>Cashier</th>
+                    <th>Payment Method</th>
+                    <th class="text-end">Total Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sale in sales %}
+                <tr>
+                    <td>{{ sale.date|date:"Y-m-d H:i" }}</td>
+                    <td>#{{ sale.id }}</td>
+                    <td>
+                        {% if sale.customer %}
+                            {{ sale.customer.name }}
+                        {% else %}
+                            <span class="text-muted">Walk-in</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ sale.user.username|default:"Unknown" }}</td>
+                    <td>
+                        <span class="badge bg-secondary rounded-pill">
+                            {{ sale.get_payment_method_display|default:sale.payment_method }}
+                        </span>
+                    </td>
+                    <td class="text-end fw-bold text-success">${{ sale.total_amount }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center py-5 text-muted">
+                        <i class="fas fa-info-circle fa-2x mb-3 d-block text-secondary opacity-50"></i>
+                        No sales data available.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
